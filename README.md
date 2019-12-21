@@ -55,3 +55,23 @@ Content-Length: 23
 
 {"value":"Hello, JSON"}
 ```
+
+## Generate proto descriptor
+Move repository root and execute command.
+
+```
+protoc -I. \
+  -I$GOPATH/src/github.com/grpc-ecosystem/grpc-gateway/third_party/googleapis \
+  --include_imports \
+  --include_source_info \
+  --descriptor_set_out=./envoy/proto.pb \
+  ./service/service.proto
+```
+
+## Build envoy docker image and run the image
+Move `envoy` directory and execute command.
+
+```
+docker build -t service/echo -f ./envoy.Dockerfile .
+docker run -d -p 8080:51051 service/echo
+``
