@@ -1,5 +1,2 @@
 .idea
 
-*.pb.go
-*.pb.gw.go
-*.pb
