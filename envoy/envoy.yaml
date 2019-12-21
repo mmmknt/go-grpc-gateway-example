@@ -26,6 +26,19 @@ static_resources:
               - match: { prefix: "/" }
                 route: { cluster: grpc, timeout: { seconds: 60 } }
           http_filters:
+          - name: envoy.lua
+            typed_config:
+              "@type": type.googleapis.com/envoy.config.filter.http.lua.v2.Lua
+              inline_code: |
+                function envoy_on_response(response_handle)
+                  response_handle:headers():remove('grpc-status')
+                  response_handle:headers():remove('x-envoy-upstream-service-time')
+                  message = response_handle:headers():get('grpc-message')
+                  if message ~= '' then
+                    response_handle:headers():add('error-message', message)
+                  end
+                  response_handle:headers():remove('grpc-message')
+                end
           - name: envoy.grpc_json_transcoder
             config:
               proto_descriptor: "/tmp/envoy/proto.pb"
