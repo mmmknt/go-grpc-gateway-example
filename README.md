@@ -1,50 +1,31 @@
 # go-grpc-gateway-example
 
-## Prerequisites
-TODO
-
-## Generate codes from service.proto
-Move repository root and execute command.
-
-```
-protoc -I/usr/local/include -I. \
-  -I$GOPATH/src \
-  -I$GOPATH/src/github.com/grpc-ecosystem/grpc-gateway/third_party/googleapis \
-  --go_out=plugins=grpc:. \
-  --grpc-gateway_out=logtostderr=true:. \
-  ./service/service.proto
-```  
-
-`service.pb.go` and `service.pb.gq.go` are generated into service directory.
-
-## Execute gRPC server
-Move `sever` directory and execute command.
-
-`go run ./`
+## How to use
+### gRPC only
+#### Server
+Move `sever` directory and execute `go run .`.
 
 TODO how to confirm normal execution
 
-## Send gRPC request
-Move `client` directory and execute command.
-
-`go run ./`
+#### Client
+Move `client` directory and execute `go run .`.
 
 You can see info log.
 
 `2019/12/21 18:41:49 Echo: value:"Hello, World"`
 
-## Execute reverse proxy server
-Move `gateway` directory and execute command.
-
-`go run ./`
+### REST with grpc-gateway
+#### Server
+After running gRPC server, move `gateway` and execute `go run .`.
 
 TODO how to confirm normal execution
 
-## Send REST request
+#### Client
+Send http request by curl:
 
 `curl -D - -s -H 'Content-Type:application/json' -d '{"value":"JSON"}' -X POST http://localhost:8080/v1/example/echo`
 
-You can see normal http response.
+You see normal response like this:
 
 ```
 HTTP/1.1 200 OK
@@ -56,9 +37,47 @@ Content-Length: 23
 {"value":"Hello, JSON"}
 ```
 
-## Generate proto descriptor
-Move repository root and execute command.
+### REST with gRPC-JSON transcoder
+#### Server
+After running gRPC server, move `envoy` directory and execute these command.
 
+```
+docker build -t service/echo -f ./envoy.Dockerfile .
+docker run -d -p 8080:51051 service/echo
+```
+
+#### Client
+Send http request as same as 'REST with grpc-gateway'.
+
+You see normal response like this:
+
+```
+HTTP/1.1 200 OK
+content-type: application/json
+x-envoy-upstream-service-time: 1
+grpc-status: 0
+grpc-message: 
+content-length: 28
+date: Sat, 21 Dec 2019 14:57:57 GMT
+server: envoy
+
+{
+ "value": "Hello, JSON"
+}
+```
+
+### Regeneration
+#### service.pb.go and service.pb.gw.go
+```
+protoc -I/usr/local/include -I. \
+  -I$GOPATH/src \
+  -I$GOPATH/src/github.com/grpc-ecosystem/grpc-gateway/third_party/googleapis \
+  --go_out=plugins=grpc:. \
+  --grpc-gateway_out=logtostderr=true:. \
+  ./service/service.proto
+```  
+
+#### proto.pb
 ```
 protoc -I. \
   -I$GOPATH/src/github.com/grpc-ecosystem/grpc-gateway/third_party/googleapis \
@@ -68,10 +87,3 @@ protoc -I. \
   ./service/service.proto
 ```
 
-## Build envoy docker image and run the image
-Move `envoy` directory and execute command.
-
-```
-docker build -t service/echo -f ./envoy.Dockerfile .
-docker run -d -p 8080:51051 service/echo
-``
